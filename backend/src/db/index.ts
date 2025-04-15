@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Error } from "mongoose";
 
 const connectDB = async () => {
     try {
@@ -7,7 +7,13 @@ const connectDB = async () => {
         });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
     } catch (error: any) {
-        console.error(`Error: ${error.message}`);
+        if (error instanceof Error) {
+            console.error(`Error: ${error.message}`);
+        } else if (error instanceof Error) {
+            console.error(`Error: ${error.message}`);
+        } else {
+            console.error(`Error: ${error.message}`); // handle different kind of errors
+        }
         process.exit(1);
     }
 };
