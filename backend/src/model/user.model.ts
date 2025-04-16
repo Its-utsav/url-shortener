@@ -1,9 +1,14 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Document, model, Model, Schema } from "mongoose";
+import { Document, model, Model, Schema, Types } from "mongoose";
 import type { userData } from "../schema/user.schema";
 
-interface IUser extends Document, userData {}
+export interface IUser extends Document, userData {
+    _id: Types.ObjectId;
+    checkPassword(userPassword: string): Promise<boolean>;
+    generateAccessToken(): string | undefined;
+    generateRefershToken(): string | undefined;
+}
 
 const userSchema = new Schema<IUser>(
     {
@@ -34,7 +39,7 @@ const userSchema = new Schema<IUser>(
     }
 );
 
-userSchema.pre("save", async function (next) {
+userSchema.pre<IUser>("save", async function (next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
 
@@ -47,15 +52,17 @@ userSchema.methods.checkPassword = async function (
     return await bcrypt.compare(userPassword, this.password);
 };
 
-userSchema.methods.genrateRefershToken = function (): string | undefined {
+userSchema.methods.generateRefershToken = function (): string | undefined {
     try {
         return jwt.sign(
             {
                 _id: this._id,
             },
-            process.env.REFERSHTOKEN_KEY! as string,
+            process.env.REFERSHTOKEN_KEY as string,
             {
-                expiresIn: parseInt(process.env.REFERSHTOKEN_EXPIRY!),
+                expiresIn:
+                    `${parseInt(process.env.REFERSHTOKEN_EXPIRY!, 10)}D` ||
+                    "30D",
             }
         );
     } catch (error) {
@@ -64,7 +71,7 @@ userSchema.methods.genrateRefershToken = function (): string | undefined {
     }
 };
 
-userSchema.methods.genrateAccessToken = function (): string | undefined {
+userSchema.methods.generateAccessToken = function (): string | undefined {
     try {
         return jwt.sign(
             {
@@ -72,9 +79,10 @@ userSchema.methods.genrateAccessToken = function (): string | undefined {
                 username: this.username,
                 email: this.email,
             },
-            process.env.ACCESSTOKEN_KEY! as string,
+            process.env.ACCESSTOKEN_KEY as string,
             {
-                expiresIn: parseInt(process.env.ACCESSTOKEN_EXPIRY!),
+                expiresIn:
+                    `${parseInt(process.env.ACCESSTOKEN_EXPIRY!, 10)}D` || "1D",
             }
         );
     } catch (error) {

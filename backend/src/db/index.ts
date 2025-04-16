@@ -6,13 +6,11 @@ const connectDB = async () => {
             dbName: "url-shortner",
         });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
-    } catch (error: any) {
-        if (error instanceof Error) {
-            console.error(`Error: ${error.message}`);
+    } catch (error: unknown) {
+        if (error instanceof mongoose.Error) {
+            console.error(`Error from mongoose: ${error.message}`);
         } else if (error instanceof Error) {
             console.error(`Error: ${error.message}`);
-        } else {
-            console.error(`Error: ${error.message}`); // handle different kind of errors
         }
         process.exit(1);
     }

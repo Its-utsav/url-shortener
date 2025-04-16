@@ -1,6 +1,6 @@
-import { model, Schema, Document, Model } from "mongoose";
+import { Document, model, Model, Schema } from "mongoose";
 import { urlData } from "../schema/url.schema";
-import { genrateShortUrl } from "../utils/utils";
+import { genrateShortUrl } from "../utils/url.utils";
 
 interface IUrl extends Document, urlData {}
 
@@ -30,7 +30,7 @@ const urlSchema = new Schema<IUrl>(
     }
 );
 
-urlSchema.pre("save", function (next) {
+urlSchema.pre<IUrl>("save", function (next) {
     if (!this.isModified("originalUrl")) return next();
 
     this.shortUrl = genrateShortUrl();
