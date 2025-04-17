@@ -6,6 +6,7 @@ import ApiError from "../utils/ApiError";
 import ApiResponse from "../utils/ApiResponse";
 import asyncHandler from "../utils/asyncHandler";
 import { generateAccessAndRefershToken } from "../utils/user.utils";
+import jwt from "jsonwebtoken";
 
 const opions = {
     secure: true,
@@ -126,4 +127,59 @@ const logoutUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, "User Logged Out successfully"));
 });
 
-export { registerUser, loginUser, logoutUser };
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    // get refreshtoken from cookies and validate it if ok than give new access token
+    const recivedRefereshToken =
+        req.headers.authorization?.replace("Bearer ", "") ||
+        req.cookies("refershToken");
+
+    if (!recivedRefereshToken)
+        throw new ApiError(
+            401,
+            "RefershToken were not provided, Unauthorized request"
+        );
+
+    try {
+        const decodeInfo = jwt.verify(
+            recivedRefereshToken,
+            process.env.REFERSHTOKEN_KEY as string
+        );
+
+        if (typeof decodeInfo === "string" || !decodeInfo)
+            throw new ApiError(401, "Unauthorized request");
+
+        const user = await User.findById(decodeInfo._id);
+
+        if (!user) throw new ApiError(400, "User not found");
+
+        if (recivedRefereshToken !== user.refreshToken)
+            throw new ApiError(401, "Refresh Token is already used or invalid");
+        const { accessToken, refreshToken } =
+            await generateAccessAndRefershToken(user._id);
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id,
+            {
+                refreshToken: refreshToken,
+            },
+            {
+                new: true,
+            }
+        ).select("-password -refreshToken");
+        res.cookie("accessToken", accessToken!, opions)
+            .cookie("refershToken", refreshToken!, opions)
+            .json(
+                new ApiResponse(
+                    200,
+                    { ...updatedUser?.toObject(), accessToken, refreshToken },
+                    "Refresh Token is update"
+                )
+            );
+    } catch (error) {
+        throw new ApiError(
+            401,
+            "Something went wrong while Refreshing refresh token"
+        );
+    }
+});
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken };

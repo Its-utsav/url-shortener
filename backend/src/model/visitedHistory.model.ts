@@ -1,7 +1,7 @@
 import { Document, model, Schema } from "mongoose";
 import { visitedHistoryData } from "../schema/visitedHistory.schema";
 
-interface IVisitedHistory extends Document, visitedHistoryData { }
+interface IVisitedHistory extends Document, visitedHistoryData {}
 
 const visitedHistorySchema = new Schema<IVisitedHistory>(
     {
@@ -30,6 +30,5 @@ const visitedHistory = model<IVisitedHistory>(
     "visitedHistory",
     visitedHistorySchema
 );
-
 
 export default visitedHistory;
