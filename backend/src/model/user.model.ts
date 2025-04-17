@@ -4,7 +4,6 @@ import { Document, model, Model, Schema, Types } from "mongoose";
 import type { userData } from "../schema/user.schema";
 
 export interface IUser extends Document, userData {
-    _id: Types.ObjectId;
     checkPassword(userPassword: string): Promise<boolean>;
     generateAccessToken(): string | undefined;
     generateRefershToken(): string | undefined;
@@ -32,6 +31,10 @@ const userSchema = new Schema<IUser>(
         },
         refreshToken: {
             type: String,
+        },
+        createdShortUrl: {
+            type: Schema.Types.ObjectId,
+            ref: "Url",
         },
     },
     {

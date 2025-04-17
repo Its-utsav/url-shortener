@@ -23,7 +23,7 @@ const registerUser = asyncHandler(
         });
 
         const errorMsg = zodStatus.error?.errors
-            .map((e) => e.message)
+            .map((e: { message: any }) => e.message)
             .join(", ");
 
         if (!zodStatus.success) {

@@ -1,9 +1,8 @@
-import mongoose from "mongoose";
 import User from "../model/user.model";
 import ApiError from "./ApiError";
 
 export const generateAccessAndRefershToken = async (
-    userId: mongoose.Types.ObjectId
+    userId: any
 ): Promise<{
     accessToken: string | undefined;
     refreshToken: string | undefined;
