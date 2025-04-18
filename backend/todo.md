@@ -21,4 +21,56 @@ Your schema is already quite well-structured, but here are a few enhancements yo
 - **URL categories**: Add a category field for URLs (personal, work, marketing, etc.).
 - **Blacklist domain checking**: Prevent shortening malicious or banned domains.
 
-Would any of these additions be useful for your project? 🚀
+->
+
+mongoDB
+
+```js
+[
+  {
+    $match: {
+      shortUrlId: ObjectId(
+        "6800ea603a8a955ee6ea8d8b"
+      ),
+    },
+  },
+  {
+    $group: {
+      _id: "$deviceType",
+      totalClicks: { $sum: 1 },
+    },
+  },
+  {
+    $group: {
+      _id: null,
+      total: { $sum: "$totalClicks" },
+      counts: {
+        $push: {
+          deviceType: "$_id",
+          totalClicks: "$totalClicks",
+        },
+      },
+    },
+  },
+  {
+    $unwind: "$counts",
+  },
+  {
+    $project: {
+      deviceType: "$counts.deviceType",
+      totalClicks: "$counts.totalClicks",
+      per: {
+        $multiply: [
+          {
+            $divide: [
+              "$counts.totalClicks",
+              "$total",
+            ],
+          },
+          100,
+        ],
+      },
+    },
+  },
+]
+```

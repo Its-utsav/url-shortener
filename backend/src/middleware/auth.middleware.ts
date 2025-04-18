@@ -16,7 +16,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
             accessToken,
             process.env.ACCESSTOKEN_KEY as string
         );
-        console.log(decodeInfo);
+        // console.log(decodeInfo);
         if (typeof decodeInfo === "string")
             throw new ApiError(401, "Unauthorized request");
 

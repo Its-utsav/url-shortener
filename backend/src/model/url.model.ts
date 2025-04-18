@@ -1,9 +1,11 @@
-import { Document, model, Model, Schema } from "mongoose";
+import { Document, model, Model, ObjectId, Schema } from "mongoose";
 import { urlData } from "../schema/url.schema";
 import { genrateShortUrl } from "../utils/url.utils";
 import bcrypt from "bcrypt";
 
 interface IUrl extends Document, urlData {
+    shortUrl: string;
+    createdBy: ObjectId;
     checkPassword(userPassword: string): Promise<boolean>;
 }
 
@@ -30,8 +32,7 @@ const urlSchema = new Schema<IUrl>(
             default: false,
         },
         password: {
-            type: Boolean,
-            default: false,
+            type: String,
         },
     },
     {
