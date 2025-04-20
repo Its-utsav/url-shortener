@@ -49,11 +49,14 @@ const registerUser = asyncHandler(
         const session = await mongoose.startSession();
         try {
             session.startTransaction();
-            const createdUser = await User.create({
-                username: data.username,
-                email: data.email,
-                password: data.password,
-            }, { session });
+            const createdUser = await User.create(
+                {
+                    username: data.username,
+                    email: data.email,
+                    password: data.password,
+                },
+                { session }
+            );
 
             if (!createdUser || createdUser.length == 0) {
                 await session.abortTransaction();
@@ -66,19 +69,19 @@ const registerUser = asyncHandler(
                 _id: newUser._id,
                 username: newUser.username,
                 email: newUser.email,
-            }
+            };
 
             session.commitTransaction();
 
             return res
                 .status(201)
-                .json(
-                    new ApiResponse(201, user, "User register successfully")
-                );
-
+                .json(new ApiResponse(201, user, "User register successfully"));
         } catch (error) {
             await session.abortTransaction();
-            throw new ApiError(500, "Faild to create user due to internal server error");
+            throw new ApiError(
+                500,
+                "Faild to create user due to internal server error"
+            );
         } finally {
             await session.endSession();
         }
@@ -93,8 +96,9 @@ const loginUser = asyncHandler(
         // email , password
         const { email, password } = req.body;
         const zodStatus = userLoginSchemaZod.safeParse({
-            email, password
-        })
+            email,
+            password,
+        });
         if (!zodStatus.success) {
             const errorMsg = zodStatus.error.errors
                 .map((e) => e.message)

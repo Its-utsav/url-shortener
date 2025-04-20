@@ -6,7 +6,6 @@ export interface IUser {
     password: string;
 }
 
-
 export interface UserResponse {
     _id: ObjectId;
     email: string;

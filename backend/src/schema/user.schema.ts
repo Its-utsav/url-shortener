@@ -15,9 +15,9 @@ export type userData = z.infer<typeof userSchemaZod>;
 
 export const userLoginSchemaZod = z.object({
     email: z.string().email({
-        message: "Invalid email"
+        message: "Invalid email",
     }),
-    password: z.string()
-})
+    password: z.string(),
+});
 
-export type userLogin = z.infer<typeof userLoginSchemaZod>
+export type userLogin = z.infer<typeof userLoginSchemaZod>;

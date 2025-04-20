@@ -6,7 +6,11 @@ import {
     updateUrlSchemaZod,
     urlSchemaZod,
 } from "../schema/url.schema";
-import { fullDataForShortUrlCreation, IncomeingUrlData, IShortUrl } from "../types/url.type";
+import {
+    fullDataForShortUrlCreation,
+    IncomeingUrlData,
+    IShortUrl,
+} from "../types/url.type";
 import ApiError from "../utils/ApiError";
 import ApiResponse from "../utils/ApiResponse";
 import asyncHandler from "../utils/asyncHandler";
@@ -28,7 +32,10 @@ const createShortUrl = asyncHandler(
             const errorMsg = zodStatus.error.errors
                 .map((e) => e.message)
                 .join(", ");
-            throw new ApiError(400, errorMsg || "Invalid data for Short Url creation");
+            throw new ApiError(
+                400,
+                errorMsg || "Invalid data for Short Url creation"
+            );
         }
 
         const data: Partial<fullDataForShortUrlCreation> = {
@@ -334,7 +341,10 @@ const getAnalytics = asyncHandler(
 );
 
 export {
-    createShortUrl, deleteShortUrl,
-    getAnalytics, redirectToOriginalUrl, redirectToProtectedUrl, updateShortUrl
+    createShortUrl,
+    deleteShortUrl,
+    getAnalytics,
+    redirectToOriginalUrl,
+    redirectToProtectedUrl,
+    updateShortUrl,
 };
-
