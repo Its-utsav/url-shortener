@@ -4,6 +4,7 @@ import { genrateShortUrl } from "../utils/url.utils";
 import bcrypt from "bcrypt";
 
 export interface IUrl extends Document, urlData {
+    _id: ObjectId;
     shortUrl: string;
     createdBy: ObjectId;
     // isPasswordProtected?: boolean;

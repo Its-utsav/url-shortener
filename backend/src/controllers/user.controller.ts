@@ -1,12 +1,14 @@
 import { Request, Response } from "express";
 import User from "../model/user.model";
-import { userSchemaZod } from "../schema/user.schema";
-import { IUser } from "../types/user.type";
+import { userLoginSchemaZod, userSchemaZod } from "../schema/user.schema";
+import { IUser, UserResponse } from "../types/user.type";
 import ApiError from "../utils/ApiError";
 import ApiResponse from "../utils/ApiResponse";
 import asyncHandler from "../utils/asyncHandler";
 import { generateAccessAndRefershToken } from "../utils/user.utils";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import Url from "../model/url.model";
 
 const opions = {
     secure: true,
@@ -23,55 +25,63 @@ const registerUser = asyncHandler(
             password: password,
         });
 
-        const errorMsg = zodStatus.error?.errors
-            .map((e: { message: any }) => e.message)
-            .join(", ");
-
         if (!zodStatus.success) {
-            throw new ApiError(400, errorMsg);
-        }
-
-        const existingUserByUserName = await User.findOne({
-            username,
-        });
-
-        if (existingUserByUserName) {
+            const errorMsg = zodStatus.error.errors
+                .map((e) => e.message)
+                .join(", ");
             throw new ApiError(
                 400,
-                `User alreay exist with ${username} username`
+                errorMsg || "Invalid input for user creation"
             );
         }
-
-        const existingUserByEmail = await User.findOne({
-            email,
+        const data = zodStatus.data;
+        const existingUser = await User.findOne({
+            $or: [{ username: data.username }, { email: data.email }],
         });
 
-        if (existingUserByEmail) {
-            throw new ApiError(400, `User alreay exist with ${email} email`);
+        if (existingUser) {
+            let foundBy = "";
+            if (existingUser.username === username) foundBy = "username";
+            if (existingUser.email === email) foundBy = "email";
+            throw new ApiError(400, `User alreay exist with ${foundBy}`);
         }
 
-        const user = await User.create({
-            username,
-            email,
-            password,
-        });
+        const session = await mongoose.startSession();
+        try {
+            session.startTransaction();
+            const createdUser = await User.create({
+                username: data.username,
+                email: data.email,
+                password: data.password,
+            }, { session });
 
-        const createdUser = await User.findById(user._id)
-            .select("-password -refreshToken")
-            .lean();
+            if (!createdUser || createdUser.length == 0) {
+                await session.abortTransaction();
+                throw new ApiError(500, "Failed to create user document.");
+            }
 
-        if (!user || !createdUser) {
-            throw new ApiError(
-                500,
-                "Something went wrong while registering user."
-            );
+            const newUser = createdUser[0].toObject();
+
+            const user: UserResponse = {
+                _id: newUser._id,
+                username: newUser.username,
+                email: newUser.email,
+            }
+
+            session.commitTransaction();
+
+            return res
+                .status(201)
+                .json(
+                    new ApiResponse(201, user, "User register successfully")
+                );
+
+        } catch (error) {
+            await session.abortTransaction();
+            throw new ApiError(500, "Faild to create user due to internal server error");
+        } finally {
+            await session.endSession();
         }
-
-        return res
-            .status(201)
-            .json(
-                new ApiResponse(200, createdUser, "User register successfully")
-            );
     }
 );
 
@@ -82,8 +92,18 @@ const loginUser = asyncHandler(
     ) => {
         // email , password
         const { email, password } = req.body;
-        if (!email) throw new ApiError(400, "Email not provided");
-        if (!password) throw new ApiError(400, "password not provided");
+        const zodStatus = userLoginSchemaZod.safeParse({
+            email, password
+        })
+        if (!zodStatus.success) {
+            const errorMsg = zodStatus.error.errors
+                .map((e) => e.message)
+                .join(", ");
+            throw new ApiError(
+                400,
+                errorMsg || "Invalid input for user creation"
+            );
+        }
 
         const user = await User.findOne({
             email: email,
@@ -182,4 +202,39 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 });
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const deleteUser = asyncHandler(async (req, res) => {
+    const userId = req.user?._id;
+    const session = await mongoose.startSession();
+    try {
+        session.startTransaction();
+        // remove all short url links created by currently loggedin user
+        await Url.deleteMany({ createdBy: userId }, { session });
+
+        // now remove user it self
+        const isUserExists = await User.findByIdAndDelete(userId);
+        if (!isUserExists) {
+            // no user foudn abort it
+            await session.abortTransaction();
+            throw new ApiError(404, "User not exists");
+        }
+
+        session.commitTransaction();
+
+        return res
+            .status(200)
+            .clearCookie("accessToken", opions)
+            .clearCookie("refershToken", opions)
+            .json(new ApiResponse(200, "User Successfully Deleted"));
+    } catch (error) {
+        // any error abourt it
+        session.abortTransaction();
+        throw new ApiError(
+            500,
+            "Failed to delete user due to an internal error"
+        );
+    } finally {
+        session.endSession();
+    }
+});
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken, deleteUser };

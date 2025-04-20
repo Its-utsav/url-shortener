@@ -1,26 +1,16 @@
 import { Request, Response } from "express";
-import Url, { IUrl } from "../model/url.model";
-import asyncHandler from "../utils/asyncHandler";
-import { ObjectId } from "mongoose";
-import ApiError from "../utils/ApiError";
+import Url from "../model/url.model";
+import visitedHistory from "../model/visitedHistory.model";
 import {
     updatedUrlData,
     updateUrlSchemaZod,
     urlSchemaZod,
 } from "../schema/url.schema";
+import { fullDataForShortUrlCreation, IncomeingUrlData, IShortUrl } from "../types/url.type";
+import ApiError from "../utils/ApiError";
 import ApiResponse from "../utils/ApiResponse";
-import visitedHistory from "../model/visitedHistory.model";
-
-interface IncomeingUrlData {
-    originalUrl: string;
-    description: string;
-    isPasswordProtected?: boolean;
-    password?: string;
-}
-
-interface fullDataForShortUrl extends IncomeingUrlData {
-    createdBy: ObjectId;
-}
+import asyncHandler from "../utils/asyncHandler";
+import mongoose from "mongoose";
 
 const createShortUrl = asyncHandler(
     async (req: Request<any, any, IncomeingUrlData>, res) => {
@@ -34,56 +24,60 @@ const createShortUrl = asyncHandler(
             password,
         });
 
-        const errorMsg = zodStatus.error?.errors
-            .map((e: { message: any }) => e.message)
-            .join(", ");
-
         if (!zodStatus.success) {
-            throw new ApiError(400, errorMsg);
+            const errorMsg = zodStatus.error.errors
+                .map((e) => e.message)
+                .join(", ");
+            throw new ApiError(400, errorMsg || "Invalid data for Short Url creation");
         }
 
-        const data: Partial<fullDataForShortUrl> = {
+        const data: Partial<fullDataForShortUrlCreation> = {
             ...zodStatus.data,
             createdBy: req.user?._id,
         };
         if (!data.isPasswordProtected) {
             delete data.password;
         }
-        if (
-            data.isPasswordProtected === true &&
-            (data.password?.trim() === "" || !password)
-        ) {
-            throw new ApiError(
-                400,
-                "If short url is password protected then password field is compulsory"
-            );
+        const session = await mongoose.startSession();
+        try {
+            const shortUrl = await Url.create(data);
+            if (!shortUrl) {
+                await session.abortTransaction();
+                throw new ApiError(500, "Error while creating short url");
+            }
+            session.commitTransaction();
+            const shortUrlData = shortUrl.toObject();
+            delete shortUrlData.password;
+            return res
+                .status(201)
+                .json(
+                    new ApiResponse(
+                        201,
+                        shortUrlData,
+                        "Short url created successfully"
+                    )
+                );
+        } catch (error) {
+            await session.abortTransaction();
+            throw new ApiError(400, "Error while Short Url Creaation");
+        } finally {
+            await session.endSession();
         }
-
-        const shortUrl = await Url.create(data);
-        if (!shortUrl)
-            throw new ApiError(500, "Error while creating short url");
-        const shortUrlData = shortUrl.toObject();
-        delete shortUrlData.password;
-        return res
-            .status(201)
-            .json(
-                new ApiResponse(
-                    201,
-                    shortUrlData,
-                    "Short url created successfully"
-                )
-            );
     }
 );
 
 const redirectToOriginalUrl = asyncHandler(
     async (req: Request, res: Response) => {
         const { shortUrl } = req.params;
-        if (!shortUrl) throw new ApiError(401, "Short Url not provided");
+        if (!shortUrl) {
+            throw new ApiError(401, "Short Url not provided");
+        }
 
         const url = await Url.findOne({ shortUrl: shortUrl });
 
-        if (!url) throw new ApiError(404, "Url not found");
+        if (!url) {
+            throw new ApiError(404, "Url not found");
+        }
 
         const ip = req.headers["x-real-ip"] || req.socket.remoteAddress;
 
@@ -105,10 +99,6 @@ const redirectToOriginalUrl = asyncHandler(
         }
     }
 );
-
-interface IShortUrl {
-    shortUrl?: string;
-}
 
 const redirectToProtectedUrl = asyncHandler(
     async (
@@ -269,7 +259,7 @@ const deleteShortUrl = asyncHandler(
             throw new ApiError(404, "Url not found");
         }
 
-        const history = await visitedHistory.findOneAndDelete({
+        await visitedHistory.deleteMany({
             shortUrlId: url._id,
         });
 
@@ -344,10 +334,7 @@ const getAnalytics = asyncHandler(
 );
 
 export {
-    createShortUrl,
-    redirectToOriginalUrl,
-    updateShortUrl,
-    deleteShortUrl,
-    getAnalytics,
-    redirectToProtectedUrl,
+    createShortUrl, deleteShortUrl,
+    getAnalytics, redirectToOriginalUrl, redirectToProtectedUrl, updateShortUrl
 };
+

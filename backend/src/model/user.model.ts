@@ -1,9 +1,10 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Document, model, Model, Schema, Types } from "mongoose";
+import { Document, model, Model, ObjectId, Schema, Types } from "mongoose";
 import type { userData } from "../schema/user.schema";
 
 export interface IUser extends Document, userData {
+    _id: ObjectId;
     checkPassword(userPassword: string): Promise<boolean>;
     generateAccessToken(): string | undefined;
     generateRefershToken(): string | undefined;
