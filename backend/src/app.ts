@@ -22,6 +22,6 @@ import userRoutes from "./routes/user.routes";
 import urlRoutes from "./routes/url.routes";
 
 app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/url", urlRoutes);
+app.use("/api/v1/urls", urlRoutes);
 
 export default app;

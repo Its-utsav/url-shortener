@@ -1,9 +1,13 @@
 import { Request, Response } from "express";
-import Url from "../model/url.model";
+import Url, { IUrl } from "../model/url.model";
 import asyncHandler from "../utils/asyncHandler";
 import { ObjectId } from "mongoose";
 import ApiError from "../utils/ApiError";
-import { urlSchemaZod } from "../schema/url.schema";
+import {
+    updatedUrlData,
+    updateUrlSchemaZod,
+    urlSchemaZod,
+} from "../schema/url.schema";
 import ApiResponse from "../utils/ApiResponse";
 import visitedHistory from "../model/visitedHistory.model";
 
@@ -152,33 +156,103 @@ const redirectToProtectedUrl = asyncHandler(
 );
 
 const updateShortUrl = asyncHandler(
-    async (req: Request<IShortUrl, any, { desc: string }>, res: Response) => {
-        const { desc } = req.body;
+    async (req: Request<IShortUrl, any, updatedUrlData>, res: Response) => {
+        let { description, isPasswordProtected, password } = req.body;
         const { shortUrl } = req.params;
-        if (!desc) {
-            throw new ApiError(400, "Description not provided");
-        }
 
         if (!shortUrl) {
-            throw new ApiError(400, "Short Url is not provided");
+            throw new ApiError(400, "Short Url parameter is required");
         }
 
-        const url = await Url.findOneAndUpdate(
-            { shortUrl },
-            {
-                description: desc,
-            },
-            {
-                new: true,
-            }
-        ).select("-password");
+        const zodUrlUpdateStatus = updateUrlSchemaZod.safeParse({
+            description,
+            isPasswordProtected,
+            password,
+        });
+
+        if (!zodUrlUpdateStatus.success) {
+            const errorMessage = zodUrlUpdateStatus.error.errors
+                .map((e) => e.message)
+                .join(", ");
+            throw new ApiError(400, errorMessage || "Invalid update data");
+        }
+
+        const url = await Url.findOne({ shortUrl });
 
         if (!url) {
             throw new ApiError(404, "Url not found");
         }
+
+        if (url.createdBy.toString() !== req.user?._id.toString()) {
+            throw new ApiError(
+                403,
+                "You are not authorized to update this URL"
+            );
+        }
+        const updatedData = zodUrlUpdateStatus.data;
+        let updateStatus = false;
+
+        // description provided and it should not be same is as previous
+
+        if (
+            updatedData.description != undefined &&
+            url.description != updatedData.description
+        ) {
+            url.description = updatedData.description;
+            updateStatus = true;
+        }
+
+        // update password
+        // isPasswordProtected -> true
+        if (isPasswordProtected) {
+            // Currently isPasswordProtected is false
+            // url.isPassword -> false -> so need to update to true
+            // new password not same with old one
+            if (
+                url.isPasswordProtected === false ||
+                !(await url.checkPassword(updatedData.password!))
+            ) {
+                url.isPasswordProtected = true;
+                url.password = updatedData.password;
+                updateStatus = true;
+            }
+        } else {
+            // isPasswordProtected -> false
+            // Currently isPasswordProtected must be true
+            // so remove  isPasswordProtected  and password
+            if (url.isPasswordProtected == true) {
+                url.isPasswordProtected = false;
+                url.password = undefined;
+                updateStatus = true;
+            }
+        }
+
+        // if nothing change so return response
+
+        if (!updateStatus) {
+            return res.status(200).json(
+                new ApiResponse(200, {
+                    url: url.toObject({ virtuals: true }),
+                })
+            );
+        }
+
+        // something updated so save it
+
+        const updatedUrl = await url.save();
+        const urlObject = updatedUrl.toObject({ virtuals: true });
+
+        delete urlObject.password;
+
         return res
             .status(200)
-            .json(new ApiResponse(200, url, "Short Url updated successfully"));
+            .json(
+                new ApiResponse(
+                    200,
+                    { url: urlObject },
+                    "Short Url Update Successfully"
+                )
+            );
     }
 );
 
@@ -258,10 +332,11 @@ const getAnalytics = asyncHandler(
                 },
             },
         ]);
-        console.log(data);
+
         if (!data || data?.length == 0) {
-            throw new ApiError(404, "Url not found");
+            throw new ApiError(404, "No Data found");
         }
+
         return res
             .status(200)
             .json(new ApiResponse(200, data, "Url info fetched successfully"));

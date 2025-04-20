@@ -16,12 +16,12 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
             accessToken,
             process.env.ACCESSTOKEN_KEY as string
         );
-        // console.log(decodeInfo);
+
         if (typeof decodeInfo === "string")
             throw new ApiError(401, "Unauthorized request");
 
         const user = await User.findById(decodeInfo._id);
-        // console.log(user)
+
         if (!user) throw new ApiError(401, "User not found");
 
         req.user = user;

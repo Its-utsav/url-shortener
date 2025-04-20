@@ -3,9 +3,10 @@ import { urlData } from "../schema/url.schema";
 import { genrateShortUrl } from "../utils/url.utils";
 import bcrypt from "bcrypt";
 
-interface IUrl extends Document, urlData {
+export interface IUrl extends Document, urlData {
     shortUrl: string;
     createdBy: ObjectId;
+    // isPasswordProtected?: boolean;
     checkPassword(userPassword: string): Promise<boolean>;
 }
 
@@ -33,6 +34,7 @@ const urlSchema = new Schema<IUrl>(
         },
         password: {
             type: String,
+            required: false,
         },
     },
     {
@@ -49,9 +51,8 @@ urlSchema.pre<IUrl>("save", function (next) {
 
 urlSchema.pre<IUrl>("save", async function (next) {
     if (!this.isPasswordProtected) return next();
-    if (!this.isModified("password") || !this.isModified("password")) next();
+    if (!this.isModified("password")) next();
     this.password = await bcrypt.hash(this.password!, 10);
-
     next();
 });
 
