@@ -1,6 +1,6 @@
 import { Document, model, Model, ObjectId, Schema } from "mongoose";
 import { urlData } from "../schema/url.schema";
-import { genrateShortUrl } from "../utils/url.utils";
+import { generateShortUrl } from "../utils/url.utils";
 import bcrypt from "bcrypt";
 
 export interface IUrl extends Document, urlData {
@@ -46,7 +46,7 @@ const urlSchema = new Schema<IUrl>(
 urlSchema.pre<IUrl>("save", function (next) {
     if (!this.isModified("originalUrl")) return next();
 
-    this.shortUrl = genrateShortUrl();
+    this.shortUrl = generateShortUrl();
     next();
 });
 

@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { CookieOptions, Request, Response } from "express";
 import User from "../model/user.model";
 import { userLoginSchemaZod, userSchemaZod } from "../schema/user.schema";
 import { IUser, UserResponse } from "../types/user.type";
@@ -10,9 +10,10 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import Url from "../model/url.model";
 
-const opions = {
+const opions: CookieOptions = {
     secure: true,
     httpOnly: true,
+    sameSite: "strict"
 };
 
 const registerUser = asyncHandler(

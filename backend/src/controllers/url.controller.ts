@@ -109,11 +109,11 @@ const redirectToOriginalUrl = asyncHandler(
 
 const redirectToProtectedUrl = asyncHandler(
     async (
-        req: Request<IShortUrl, any, { passowrd: string }>,
+        req: Request<IShortUrl, any, { passoword: string }>,
         res: Response
     ) => {
         const { shortUrl } = req.params;
-        const { passowrd } = req.body;
+        const { passoword } = req.body;
 
         if (!shortUrl) {
             throw new ApiError(400, "shortUrl is not provided");
@@ -130,11 +130,11 @@ const redirectToProtectedUrl = asyncHandler(
             return res.redirect(url.originalUrl);
         }
 
-        if (!passowrd) {
+        if (!passoword) {
             throw new ApiError(401, "Unauthorized Request password missing");
         }
 
-        const isValidPassword = await url.checkPassword(passowrd);
+        const isValidPassword = await url.checkPassword(passoword);
 
         if (!isValidPassword) {
             throw new ApiError(401, "Unauthorized Request , wrong password");
@@ -304,6 +304,10 @@ const getAnalytics = asyncHandler(
         // const totalClicks =  await Url.countDocuments()
         if (!url) {
             throw new ApiError(404, "Url not found");
+        }
+
+        if (url._id !== req.user?._id) {
+            throw new ApiError(403, "You are not authorized to view analytics for this URL");
         }
 
         const data = await visitedHistory.aggregate([
