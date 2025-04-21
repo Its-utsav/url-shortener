@@ -260,19 +260,36 @@ const deleteShortUrl = asyncHandler(
             throw new ApiError(400, "Short Url id not provided");
         }
 
-        const url = await Url.findOneAndDelete({ shortUrl });
+        const session = await mongoose.startSession();
 
-        if (!url) {
-            throw new ApiError(404, "Url not found");
+        try {
+            session.startTransaction();
+            const url = await Url.findOneAndDelete({ shortUrl }, { session });
+
+            if (!url) {
+                await session.abortTransaction();
+                throw new ApiError(404, "Url not found");
+            }
+
+            await visitedHistory.deleteMany(
+                {
+                    shortUrlId: url._id,
+                },
+                { session }
+            );
+
+            await session.commitTransaction();
+            return res
+                .status(200)
+                .json(
+                    new ApiResponse(200, {}, "Short Url successfully deleteed")
+                );
+        } catch (error) {
+            await session.abortTransaction();
+            throw new ApiError(500, "Internal Server error");
+        } finally {
+            await session.endSession();
         }
-
-        await visitedHistory.deleteMany({
-            shortUrlId: url._id,
-        });
-
-        return res
-            .status(200)
-            .json(new ApiResponse(200, "Short Url successfully deleteed"));
     }
 );
 

@@ -212,7 +212,16 @@ const deleteUser = asyncHandler(async (req, res) => {
     try {
         session.startTransaction();
         // remove all short url links created by currently loggedin user
-        await Url.deleteMany({ createdBy: userId }, { session });
+        const deleteUrl = await Url.deleteMany({ createdBy: userId }).session(
+            session
+        );
+        if (!deleteUrl.acknowledged) {
+            await session.abortTransaction();
+            throw new ApiError(
+                500,
+                "Internal server errror while deleting the user "
+            );
+        }
 
         // now remove user it self
         const isUserExists = await User.findByIdAndDelete(userId);
