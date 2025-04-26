@@ -7,7 +7,6 @@ export interface IUrl extends Document, urlData {
     _id: ObjectId;
     shortUrl: string;
     createdBy: ObjectId;
-    // isPasswordProtected?: boolean;
     checkPassword(userPassword: string): Promise<boolean>;
 }
 

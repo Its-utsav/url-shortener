@@ -2,7 +2,6 @@ import jwt from "jsonwebtoken";
 import User from "../model/user.model";
 import ApiError from "../utils/ApiError";
 import asyncHandler from "../utils/asyncHandler";
-// cookie ma accesstoken save che to ana par thi aapne use ne verfiy karvanu che
 
 export const verifyJWT = asyncHandler(async (req, _, next) => {
     try {
