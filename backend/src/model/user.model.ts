@@ -1,16 +1,23 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Document, model, Model, ObjectId, Schema, Types } from "mongoose";
-import type { userData } from "../schema/user.schema";
+import { Document, model, Model, Schema, Types } from "mongoose";
 
-export interface IUser extends Document, userData {
-    _id: ObjectId;
+export interface IUserMethods {
     checkPassword(userPassword: string): Promise<boolean>;
     generateAccessToken(): string | undefined;
     generateRefershToken(): string | undefined;
 }
+export interface IUserData {
+    _id: Types.ObjectId;
+    username: string;
+    email: string;
+    password: string;
+    refreshToken: string;
+    createdShortUrl: Types.ObjectId;
+}
+export interface UserDocument extends IUserData, Document<Types.ObjectId>, IUserMethods { }
 
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema<UserDocument, Model<UserDocument>, IUserMethods>(
     {
         username: {
             type: String,
@@ -43,7 +50,7 @@ const userSchema = new Schema<IUser>(
     }
 );
 
-userSchema.pre<IUser>("save", async function (next) {
+userSchema.pre<UserDocument>("save", async function (next) {
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
 
@@ -95,6 +102,6 @@ userSchema.methods.generateAccessToken = function (): string | undefined {
     }
 };
 
-const User: Model<IUser> = model("User", userSchema);
+const User: Model<UserDocument> = model("User", userSchema);
 
 export default User;

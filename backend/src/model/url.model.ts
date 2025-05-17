@@ -1,16 +1,24 @@
-import { Document, model, Model, ObjectId, Schema } from "mongoose";
-import { urlData } from "../schema/url.schema";
-import { generateShortUrl } from "../utils/url.utils";
 import bcrypt from "bcrypt";
+import { Document, model, Model, Schema, Types } from "mongoose";
+import { generateShortUrl } from "../utils/url.utils";
 
-export interface IUrl extends Document, urlData {
-    _id: ObjectId;
-    shortUrl: string;
-    createdBy: ObjectId;
+export interface IUrlMethods {
     checkPassword(userPassword: string): Promise<boolean>;
 }
 
-const urlSchema = new Schema<IUrl>(
+export interface IUrlData {
+    _id: Types.ObjectId;
+    shortUrl: string;
+    createdBy: Types.ObjectId;
+    originalUrl: string;
+    description: string;
+    isPasswordProtected: boolean;
+    password: string;
+}
+
+export interface UrlDocument extends IUrlData, Document<Types.ObjectId>, IUrlMethods { }
+
+const urlSchema = new Schema<UrlDocument, Model<UrlDocument>, IUrlMethods>(
     {
         originalUrl: {
             type: String,
@@ -42,14 +50,14 @@ const urlSchema = new Schema<IUrl>(
     }
 );
 
-urlSchema.pre<IUrl>("save", function (next) {
+urlSchema.pre<UrlDocument>("save", function (next) {
     if (!this.isModified("originalUrl")) return next();
 
     this.shortUrl = generateShortUrl();
     next();
 });
 
-urlSchema.pre<IUrl>("save", async function (next) {
+urlSchema.pre<UrlDocument>("save", async function (next) {
     if (!this.isPasswordProtected) return next();
     if (!this.isModified("password")) next();
     this.password = await bcrypt.hash(this.password!, 10);
@@ -60,6 +68,6 @@ urlSchema.methods.checkPassword = async function (password: string) {
     return await bcrypt.compare(password, this.password);
 };
 
-const Url: Model<IUrl> = model("Url", urlSchema);
+const Url: Model<UrlDocument> = model("Url", urlSchema);
 
 export default Url;
