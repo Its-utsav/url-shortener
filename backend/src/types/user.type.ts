@@ -1,4 +1,4 @@
-import { ObjectId } from "mongoose";
+import { ObjectId, Types } from "mongoose";
 
 export interface IUser {
     username: string;
@@ -7,7 +7,7 @@ export interface IUser {
 }
 
 export interface UserResponse {
-    _id: ObjectId;
+    _id: Types.ObjectId;
     email: string;
     username: string;
 }

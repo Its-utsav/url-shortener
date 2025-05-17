@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const userSchemaZod = z.object({
+export const createUserSchemaZod = z.object({
     username: z
         .string()
         .min(3, "Username must be at least 3 characters long")
@@ -11,13 +11,13 @@ export const userSchemaZod = z.object({
     createdShortUrl: z.string().optional(),
 });
 
-export type userData = z.infer<typeof userSchemaZod>;
+export type createUserData = z.infer<typeof createUserSchemaZod>;
 
-export const userLoginSchemaZod = z.object({
+export const loginUserSchemaZod = z.object({
     email: z.string().email({
-        message: "Invalid email",
+        message: "Invalid email id",
     }),
     password: z.string(),
 });
 
-export type userLogin = z.infer<typeof userLoginSchemaZod>;
+export type userLoginData = z.infer<typeof loginUserSchemaZod>;

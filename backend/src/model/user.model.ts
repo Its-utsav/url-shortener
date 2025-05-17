@@ -15,7 +15,10 @@ export interface IUserData {
     refreshToken: string;
     createdShortUrl: Types.ObjectId;
 }
-export interface UserDocument extends IUserData, Document<Types.ObjectId>, IUserMethods { }
+export interface UserDocument
+    extends IUserData,
+        Document<Types.ObjectId>,
+        IUserMethods {}
 
 const userSchema = new Schema<UserDocument, Model<UserDocument>, IUserMethods>(
     {

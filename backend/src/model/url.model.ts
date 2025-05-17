@@ -13,10 +13,13 @@ export interface IUrlData {
     originalUrl: string;
     description: string;
     isPasswordProtected: boolean;
-    password: string;
+    password?: string;
 }
 
-export interface UrlDocument extends IUrlData, Document<Types.ObjectId>, IUrlMethods { }
+export interface UrlDocument
+    extends IUrlData,
+        Document<Types.ObjectId>,
+        IUrlMethods {}
 
 const urlSchema = new Schema<UrlDocument, Model<UrlDocument>, IUrlMethods>(
     {
@@ -65,7 +68,7 @@ urlSchema.pre<UrlDocument>("save", async function (next) {
 });
 
 urlSchema.methods.checkPassword = async function (password: string) {
-    return await bcrypt.compare(password, this.password);
+    return await bcrypt.compare(password, this.password!);
 };
 
 const Url: Model<UrlDocument> = model("Url", urlSchema);

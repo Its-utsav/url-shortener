@@ -1,30 +1,29 @@
 import { CookieOptions, Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import mongoose, { isValidObjectId } from "mongoose";
+import Url from "../model/url.model";
 import User from "../model/user.model";
-import { userLoginSchemaZod, userSchemaZod } from "../schema/user.schema";
-import { IUser, UserResponse } from "../types/user.type";
+import {
+    createUserData,
+    createUserSchemaZod,
+    loginUserSchemaZod,
+    userLoginData,
+} from "../schema/user.schema";
+import { UserResponse } from "../types/user.type";
 import ApiError from "../utils/ApiError";
 import ApiResponse from "../utils/ApiResponse";
 import asyncHandler from "../utils/asyncHandler";
 import { generateAccessAndRefershToken } from "../utils/user.utils";
-import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-import Url from "../model/url.model";
 
 const opions: CookieOptions = {
     secure: true,
     httpOnly: true,
-    sameSite: "strict"
+    sameSite: "strict",
 };
 
 const registerUser = asyncHandler(
-    async (req: Request<any, any, IUser>, res: Response) => {
-        const { username, email, password } = req.body;
-
-        const zodStatus = userSchemaZod.safeParse({
-            email: email,
-            username: username,
-            password: password,
-        });
+    async (req: Request<{}, {}, createUserData>, res: Response) => {
+        const zodStatus = createUserSchemaZod.safeParse(req.body);
 
         if (!zodStatus.success) {
             const errorMsg = zodStatus.error.errors
@@ -35,9 +34,11 @@ const registerUser = asyncHandler(
                 errorMsg || "Invalid input for user creation"
             );
         }
-        const data = zodStatus.data;
+
+        const { username, email, password } = zodStatus.data;
+
         const existingUser = await User.findOne({
-            $or: [{ username: data.username }, { email: data.email }],
+            $or: [{ username: username }, { email: email }],
         });
 
         if (existingUser) {
@@ -52,9 +53,9 @@ const registerUser = asyncHandler(
             session.startTransaction();
             const createdUser = await User.create(
                 {
-                    username: data.username,
-                    email: data.email,
-                    password: data.password,
+                    username: username,
+                    email: email,
+                    password: password,
                 },
                 { session }
             );
@@ -72,13 +73,14 @@ const registerUser = asyncHandler(
                 email: newUser.email,
             };
 
-            session.commitTransaction();
+            await session.commitTransaction();
 
             return res
                 .status(201)
                 .json(new ApiResponse(201, user, "User register successfully"));
         } catch (error) {
             await session.abortTransaction();
+            console.error(error);
             throw new ApiError(
                 500,
                 "Faild to create user due to internal server error"
@@ -90,16 +92,10 @@ const registerUser = asyncHandler(
 );
 
 const loginUser = asyncHandler(
-    async (
-        req: Request<any, any, { email: string; password: string }>,
-        res: Response
-    ) => {
+    async (req: Request<any, any, userLoginData>, res: Response) => {
         // email , password
-        const { email, password } = req.body;
-        const zodStatus = userLoginSchemaZod.safeParse({
-            email,
-            password,
-        });
+
+        const zodStatus = loginUserSchemaZod.safeParse(req.body);
         if (!zodStatus.success) {
             const errorMsg = zodStatus.error.errors
                 .map((e) => e.message)
@@ -109,7 +105,7 @@ const loginUser = asyncHandler(
                 errorMsg || "Invalid input for user creation"
             );
         }
-
+        const { email, password } = zodStatus.data;
         const user = await User.findOne({
             email: email,
         });
@@ -138,13 +134,14 @@ const loginUser = asyncHandler(
 
 const logoutUser = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
-    await User.findByIdAndUpdate(
-        userId,
-        {
+    if (!isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid userId");
+    }
+    await User.findByIdAndUpdate(userId, {
+        $set: {
             refreshToken: 1,
         },
-        { new: true }
-    );
+    });
     return res
         .status(200)
         .clearCookie("accessToken", opions)
@@ -189,7 +186,9 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             {
                 new: true,
             }
-        ).select("-password -refreshToken");
+        )
+            .select("-password -refreshToken")
+            .lean();
         res.cookie("accessToken", accessToken!, opions)
             .cookie("refershToken", refreshToken!, opions)
             .json(
@@ -224,15 +223,13 @@ const deleteUser = asyncHandler(async (req, res) => {
             );
         }
 
-        // now remove user it self
+        // now remove user itself
         const isUserExists = await User.findByIdAndDelete(userId);
         if (!isUserExists) {
-            // no user foudn abort it
-            await session.abortTransaction();
-            throw new ApiError(404, "User not exists");
+            console.error("Failed To delete suser");
         }
 
-        session.commitTransaction();
+        await session.commitTransaction();
 
         return res
             .status(200)
@@ -241,14 +238,14 @@ const deleteUser = asyncHandler(async (req, res) => {
             .json(new ApiResponse(200, "User Successfully Deleted"));
     } catch (error) {
         // any error abourt it
-        session.abortTransaction();
+        await session.abortTransaction();
         throw new ApiError(
             500,
             "Failed to delete user due to an internal error"
         );
     } finally {
-        session.endSession();
+        await session.endSession();
     }
 });
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, deleteUser };
+export { deleteUser, loginUser, logoutUser, refreshAccessToken, registerUser };

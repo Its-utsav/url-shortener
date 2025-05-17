@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import Url from "../model/url.model";
 import visitedHistory from "../model/visitedHistory.model";
 import {
@@ -14,19 +15,10 @@ import {
 import ApiError from "../utils/ApiError";
 import ApiResponse from "../utils/ApiResponse";
 import asyncHandler from "../utils/asyncHandler";
-import mongoose from "mongoose";
 
 const createShortUrl = asyncHandler(
     async (req: Request<any, any, IncomeingUrlData>, res) => {
-        const { originalUrl, description, isPasswordProtected, password } =
-            req.body;
-
-        const zodStatus = urlSchemaZod.safeParse({
-            originalUrl,
-            description,
-            isPasswordProtected,
-            password,
-        });
+        const zodStatus = urlSchemaZod.safeParse(req.body);
 
         if (!zodStatus.success) {
             const errorMsg = zodStatus.error.errors
@@ -37,11 +29,16 @@ const createShortUrl = asyncHandler(
                 errorMsg || "Invalid data for Short Url creation"
             );
         }
-
+        const { originalUrl, description, isPasswordProtected, password } =
+            zodStatus.data;
         const data: Partial<fullDataForShortUrlCreation> = {
-            ...zodStatus.data,
+            originalUrl,
+            description,
+            isPasswordProtected,
+            password,
             createdBy: req.user?._id,
         };
+        // if isPasswordProtected false than no need of password so delete from password
         if (!data.isPasswordProtected) {
             delete data.password;
         }
@@ -52,7 +49,7 @@ const createShortUrl = asyncHandler(
                 await session.abortTransaction();
                 throw new ApiError(500, "Error while creating short url");
             }
-            session.commitTransaction();
+            await session.commitTransaction();
             const shortUrlData = shortUrl.toObject();
             delete shortUrlData.password;
             return res
@@ -65,6 +62,7 @@ const createShortUrl = asyncHandler(
                     )
                 );
         } catch (error) {
+            console.log("Error while short url creation", error);
             await session.abortTransaction();
             throw new ApiError(400, "Error while Short Url Creaation");
         } finally {
@@ -119,7 +117,7 @@ const redirectToProtectedUrl = asyncHandler(
             throw new ApiError(400, "shortUrl is not provided");
         }
 
-        const url = await Url.findOne({ shortUrl });
+        const url = await Url.findOne({ shortUrl: shortUrl });
 
         if (!url) {
             throw new ApiError(404, "Url not found");
@@ -148,7 +146,7 @@ const redirectToProtectedUrl = asyncHandler(
             clickedTime: Date.now(),
         });
 
-        return res.redirect(url.originalUrl);
+        return res.status(307).redirect(url.originalUrl);
     }
 );
 
@@ -307,7 +305,10 @@ const getAnalytics = asyncHandler(
         }
 
         if (url._id !== req.user?._id) {
-            throw new ApiError(403, "You are not authorized to view analytics for this URL");
+            throw new ApiError(
+                403,
+                "You are not authorized to view analytics for this URL"
+            );
         }
 
         const data = await visitedHistory.aggregate([
