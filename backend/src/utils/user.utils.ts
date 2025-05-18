@@ -9,8 +9,11 @@ export const generateAccessAndRefershToken = async (
 }> => {
     try {
         const user = await User.findById(userId);
-        const accessToken = user?.generateAccessToken();
-        const refreshToken = user?.generateRefershToken();
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefershToken();
         await User.findByIdAndUpdate(userId, {
             refreshToken: refreshToken,
         });

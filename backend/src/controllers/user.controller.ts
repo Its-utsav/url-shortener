@@ -52,11 +52,13 @@ const registerUser = asyncHandler(
         try {
             session.startTransaction();
             const createdUser = await User.create(
-                {
-                    username: username,
-                    email: email,
-                    password: password,
-                },
+                [
+                    {
+                        username: username,
+                        email: email,
+                        password: password,
+                    },
+                ],
                 { session }
             );
 
@@ -93,8 +95,6 @@ const registerUser = asyncHandler(
 
 const loginUser = asyncHandler(
     async (req: Request<any, any, userLoginData>, res: Response) => {
-        // email , password
-
         const zodStatus = loginUserSchemaZod.safeParse(req.body);
         if (!zodStatus.success) {
             const errorMsg = zodStatus.error.errors
@@ -105,10 +105,13 @@ const loginUser = asyncHandler(
                 errorMsg || "Invalid input for user creation"
             );
         }
+
         const { email, password } = zodStatus.data;
+        // try to find user by email id
         const user = await User.findOne({
             email: email,
         });
+
         if (!user) throw new ApiError(400, "User not exists");
 
         const passwordCheck = await user.checkPassword(password);
@@ -119,13 +122,18 @@ const loginUser = asyncHandler(
             await generateAccessAndRefershToken(user._id);
 
         // store the access token in cookie
-
+        const userResponse = {
+            _id: user._id,
+            username: user.username,
+            email: user.email,
+        };
         res.cookie("accessToken", accessToken!, opions)
             .cookie("refershToken", refreshToken!, opions)
             .json(
                 new ApiResponse(
                     200,
-                    { ...user.toObject(), accessToken, refreshToken },
+                    { ...userResponse },
+                    // Optinal send  accessToken, refreshToken
                     "User loggegin successfully"
                 )
             );
@@ -237,7 +245,7 @@ const deleteUser = asyncHandler(async (req, res) => {
             .clearCookie("refershToken", opions)
             .json(new ApiResponse(200, "User Successfully Deleted"));
     } catch (error) {
-        // any error abourt it
+        // any error abort it
         await session.abortTransaction();
         throw new ApiError(
             500,
@@ -248,4 +256,28 @@ const deleteUser = asyncHandler(async (req, res) => {
     }
 });
 
-export { deleteUser, loginUser, logoutUser, refreshAccessToken, registerUser };
+const getInfoOfUser = asyncHandler(async (req, res) => {
+    const userId = req.user?._id;
+    if (!isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid userId");
+    }
+
+    const user = await User.findById(userId).lean();
+
+    if (!user) {
+        throw new ApiError(404, "Uset does not exists");
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "User Data fecthed successfully"));
+});
+
+export {
+    deleteUser,
+    loginUser,
+    logoutUser,
+    refreshAccessToken,
+    registerUser,
+    getInfoOfUser,
+};

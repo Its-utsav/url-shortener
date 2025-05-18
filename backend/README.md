@@ -5,12 +5,13 @@
 
 ### User Routes
 
-| Route                        | Method | Description                                                         |
-| ---------------------------- | ------ | ------------------------------------------------------------------- |
-| `/api/v1/users/register`     | POST   | Creates a new user account.                                         |
-| `/api/v1/users/login`        | POST   | Authenticates an existing user and generates access/refresh tokens. |
-| `/api/v1/users/logout`       | POST   | Invalidates the user's current session/token.                       |
-| `/api/v1/users/refreshToken` | POST   | Generates a new access token using a refresh token.                 |
+| Route                       | Method | Description                                                         |
+| --------------------------- | ------ | ------------------------------------------------------------------- |
+| `/api/v1/auth/register`     | POST   | Creates a new user account.                                         |
+| `/api/v1/auth/login`        | POST   | Authenticates an existing user and generates access/refresh tokens. |
+| `/api/v1/auth/logout`       | POST   | Invalidates the user's current session/token.                       |
+| `/api/v1/auth/refreshToken` | POST   | Generates a new access token using a refresh token.                 |
+| `/api/v1/auth/me`           | GET    | Get User Info                                                       |
 
 
 ### Url Routes
