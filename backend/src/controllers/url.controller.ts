@@ -44,6 +44,7 @@ const createShortUrl = asyncHandler(
         }
         const session = await mongoose.startSession();
         try {
+            session.startTransaction();
             const shortUrl = await Url.create(data);
             if (!shortUrl) {
                 await session.abortTransaction();

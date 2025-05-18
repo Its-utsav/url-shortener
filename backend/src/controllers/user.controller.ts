@@ -24,14 +24,13 @@ const opions: CookieOptions = {
 const registerUser = asyncHandler(
     async (req: Request<{}, {}, createUserData>, res: Response) => {
         const zodStatus = createUserSchemaZod.safeParse(req.body);
-
         if (!zodStatus.success) {
             const errorMsg = zodStatus.error.errors
                 .map((e) => e.message)
                 .join(", ");
             throw new ApiError(
                 400,
-                errorMsg || "Invalid input for user creation"
+                errorMsg
             );
         }
 
@@ -102,7 +101,7 @@ const loginUser = asyncHandler(
                 .join(", ");
             throw new ApiError(
                 400,
-                errorMsg || "Invalid input for user creation"
+                errorMsg
             );
         }
 
@@ -245,6 +244,7 @@ const deleteUser = asyncHandler(async (req, res) => {
             .clearCookie("refershToken", opions)
             .json(new ApiResponse(200, "User Successfully Deleted"));
     } catch (error) {
+        console.error(error)
         // any error abort it
         await session.abortTransaction();
         throw new ApiError(
