@@ -20,8 +20,11 @@ app.set("trust proxy", true);
 
 import userRoutes from "./routes/user.routes";
 import urlRoutes from "./routes/url.routes";
+import globalErrorHandler from "./utils/globalErrorHandler";
 
-app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/urls", urlRoutes);
 
+// Global Error Handling middelware
+app.use(globalErrorHandler);
 export default app;
