@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions } from "jsonwebtoken";
 import { Document, model, Model, Schema, Types } from "mongoose";
 
 export interface IUserMethods {
@@ -17,8 +17,8 @@ export interface IUserData {
 }
 export interface UserDocument
     extends IUserData,
-        Document<Types.ObjectId>,
-        IUserMethods {}
+    Document<Types.ObjectId>,
+    IUserMethods { }
 
 const userSchema = new Schema<UserDocument, Model<UserDocument>, IUserMethods>(
     {
@@ -28,6 +28,7 @@ const userSchema = new Schema<UserDocument, Model<UserDocument>, IUserMethods>(
             unique: true,
             lowercase: true,
             trim: true,
+            index: true,
         },
         email: {
             type: String,
@@ -35,6 +36,7 @@ const userSchema = new Schema<UserDocument, Model<UserDocument>, IUserMethods>(
             lowercase: true,
             trim: true,
             unique: true,
+            index: true,
         },
         password: {
             type: String,
@@ -67,16 +69,20 @@ userSchema.methods.checkPassword = async function (
 };
 
 userSchema.methods.generateRefershToken = function (): string | undefined {
+    const key = process.env.REFERSHTOKEN_KEY;
+    if (!key) {
+        throw new Error("Refersh Token not available in ENV")
+    }
+    let expiresIn = (process.env.REFERSHTOKEN_EXPIRY! || "30D") as SignOptions["expiresIn"];
+
     try {
         return jwt.sign(
             {
                 _id: this._id,
             },
-            process.env.REFERSHTOKEN_KEY as string,
+            key,
             {
-                expiresIn:
-                    `${parseInt(process.env.REFERSHTOKEN_EXPIRY!, 10)}D` ||
-                    "30D",
+                expiresIn
             }
         );
     } catch (error) {
@@ -86,6 +92,11 @@ userSchema.methods.generateRefershToken = function (): string | undefined {
 };
 
 userSchema.methods.generateAccessToken = function (): string | undefined {
+    const key = process.env.ACCESSTOKEN_KEY;
+    if (!key) {
+        throw new Error("Refersh Token not available in ENV")
+    }
+    let expiresIn = (process.env.ACCESSTOKEN_EXPIRY! || "30D") as SignOptions["expiresIn"];
     try {
         return jwt.sign(
             {
@@ -93,10 +104,9 @@ userSchema.methods.generateAccessToken = function (): string | undefined {
                 username: this.username,
                 email: this.email,
             },
-            process.env.ACCESSTOKEN_KEY as string,
+            key,
             {
-                expiresIn:
-                    `${parseInt(process.env.ACCESSTOKEN_EXPIRY!, 10)}D` || "1D",
+                expiresIn
             }
         );
     } catch (error) {
