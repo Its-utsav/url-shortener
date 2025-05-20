@@ -108,11 +108,11 @@ const redirectToOriginalUrl = asyncHandler(
 
 const redirectToProtectedUrl = asyncHandler(
     async (
-        req: Request<IShortUrl, any, { passoword: string }>,
+        req: Request<IShortUrl, any, { password: string }>,
         res: Response
     ) => {
         const { shortUrl } = req.params;
-        const { passoword } = req.body;
+        const { password } = req.body;
 
         if (!shortUrl) {
             throw new ApiError(400, "shortUrl is not provided");
@@ -129,11 +129,11 @@ const redirectToProtectedUrl = asyncHandler(
             return res.redirect(url.originalUrl);
         }
 
-        if (!passoword) {
+        if (!password) {
             throw new ApiError(401, "Unauthorized Request password missing");
         }
 
-        const isValidPassword = await url.checkPassword(passoword);
+        const isValidPassword = await url.checkPassword(password);
 
         if (!isValidPassword) {
             throw new ApiError(401, "Unauthorized Request , wrong password");
@@ -305,7 +305,7 @@ const getAnalytics = asyncHandler(
             throw new ApiError(404, "Url not found");
         }
 
-        if (url._id !== req.user?._id) {
+        if (url.createdBy.toString() !== req.user?._id.toString()) {
             throw new ApiError(
                 403,
                 "You are not authorized to view analytics for this URL"
@@ -343,11 +343,21 @@ const getAnalytics = asyncHandler(
                 $project: {
                     deviceType: "$counts.deviceType",
                     totalClicks: "$counts.totalClicks",
-                    percentOfTotal: {
+                    percentageField: {
                         $multiply: [
                             { $divide: ["$counts.totalClicks", "$total"] },
                             100,
                         ],
+                    },
+                },
+            },
+            {
+                $project: {
+                    deviceType: 1,
+                    totalClicks: 1,
+                    _id: 0,
+                    percentage: {
+                        $round: ["$percentageField", 2],
                     },
                 },
             },
