@@ -17,8 +17,8 @@ export interface IUserData {
 }
 export interface UserDocument
     extends IUserData,
-    Document<Types.ObjectId>,
-    IUserMethods { }
+        Document<Types.ObjectId>,
+        IUserMethods {}
 
 const userSchema = new Schema<UserDocument, Model<UserDocument>, IUserMethods>(
     {
@@ -71,9 +71,10 @@ userSchema.methods.checkPassword = async function (
 userSchema.methods.generateRefershToken = function (): string | undefined {
     const key = process.env.REFERSHTOKEN_KEY;
     if (!key) {
-        throw new Error("Refersh Token not available in ENV")
+        throw new Error("Refersh Token not available in ENV");
     }
-    let expiresIn = (process.env.REFERSHTOKEN_EXPIRY! || "30D") as SignOptions["expiresIn"];
+    let expiresIn = (process.env.REFERSHTOKEN_EXPIRY! ||
+        "30D") as SignOptions["expiresIn"];
 
     try {
         return jwt.sign(
@@ -82,7 +83,7 @@ userSchema.methods.generateRefershToken = function (): string | undefined {
             },
             key,
             {
-                expiresIn
+                expiresIn,
             }
         );
     } catch (error) {
@@ -94,9 +95,10 @@ userSchema.methods.generateRefershToken = function (): string | undefined {
 userSchema.methods.generateAccessToken = function (): string | undefined {
     const key = process.env.ACCESSTOKEN_KEY;
     if (!key) {
-        throw new Error("Refersh Token not available in ENV")
+        throw new Error("Refersh Token not available in ENV");
     }
-    let expiresIn = (process.env.ACCESSTOKEN_EXPIRY! || "30D") as SignOptions["expiresIn"];
+    let expiresIn = (process.env.ACCESSTOKEN_EXPIRY! ||
+        "30D") as SignOptions["expiresIn"];
     try {
         return jwt.sign(
             {
@@ -106,7 +108,7 @@ userSchema.methods.generateAccessToken = function (): string | undefined {
             },
             key,
             {
-                expiresIn
+                expiresIn,
             }
         );
     } catch (error) {

@@ -28,10 +28,7 @@ const registerUser = asyncHandler(
             const errorMsg = zodStatus.error.errors
                 .map((e) => e.message)
                 .join(", ");
-            throw new ApiError(
-                400,
-                errorMsg
-            );
+            throw new ApiError(400, errorMsg);
         }
 
         const { username, email, password } = zodStatus.data;
@@ -99,10 +96,7 @@ const loginUser = asyncHandler(
             const errorMsg = zodStatus.error.errors
                 .map((e) => e.message)
                 .join(", ");
-            throw new ApiError(
-                400,
-                errorMsg
-            );
+            throw new ApiError(400, errorMsg);
         }
 
         const { email, password } = zodStatus.data;
@@ -244,7 +238,7 @@ const deleteUser = asyncHandler(async (req, res) => {
             .clearCookie("refershToken", opions)
             .json(new ApiResponse(200, "User Successfully Deleted"));
     } catch (error) {
-        console.error(error)
+        console.error(error);
         // any error abort it
         await session.abortTransaction();
         throw new ApiError(
