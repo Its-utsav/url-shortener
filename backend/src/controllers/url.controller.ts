@@ -17,7 +17,7 @@ import ApiResponse from "../utils/ApiResponse";
 import asyncHandler from "../utils/asyncHandler";
 
 const createShortUrl = asyncHandler(
-    async (req: Request<any, any, IncomeingUrlData>, res) => {
+    async (req: Request<{}, {}, IncomeingUrlData>, res) => {
         const zodStatus = urlSchemaZod.safeParse(req.body);
 
         if (!zodStatus.success) {
@@ -89,7 +89,7 @@ const redirectToOriginalUrl = asyncHandler(
 
         // Check if the URL requires a password
         if (!url.isPasswordProtected) {
-            const clientInfo = await visitedHistory.create({
+            await visitedHistory.create({
                 shortUrlId: url._id,
                 ipAddress: ip,
                 deviceType: req.useragent?.platform,
@@ -108,7 +108,7 @@ const redirectToOriginalUrl = asyncHandler(
 
 const redirectToProtectedUrl = asyncHandler(
     async (
-        req: Request<IShortUrl, any, { password: string }>,
+        req: Request<IShortUrl, {}, { password: string }>,
         res: Response
     ) => {
         const { shortUrl } = req.params;
@@ -152,8 +152,8 @@ const redirectToProtectedUrl = asyncHandler(
 );
 
 const updateShortUrl = asyncHandler(
-    async (req: Request<IShortUrl, any, updatedUrlData>, res: Response) => {
-        let { description, isPasswordProtected, password } = req.body;
+    async (req: Request<IShortUrl, {}, updatedUrlData>, res: Response) => {
+        const { description, isPasswordProtected, password } = req.body;
         const { shortUrl } = req.params;
 
         if (!shortUrl) {
@@ -284,6 +284,7 @@ const deleteShortUrl = asyncHandler(
                     new ApiResponse(200, {}, "Short Url successfully deleteed")
                 );
         } catch (error) {
+            console.error(`Error while deleteing the short url ${error}`)
             await session.abortTransaction();
             throw new ApiError(500, "Internal Server error");
         } finally {

@@ -90,7 +90,7 @@ const registerUser = asyncHandler(
 );
 
 const loginUser = asyncHandler(
-    async (req: Request<any, any, userLoginData>, res: Response) => {
+    async (req: Request<{}, {}, userLoginData>, res: Response) => {
         const zodStatus = loginUserSchemaZod.safeParse(req.body);
         if (!zodStatus.success) {
             const errorMsg = zodStatus.error.errors
