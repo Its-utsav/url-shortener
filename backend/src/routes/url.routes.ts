@@ -8,19 +8,22 @@ import {
     redirectToProtectedUrl,
     updateShortUrl,
 } from "../controllers/url.controller";
+import { generalLimit, shortUrlLimit } from "../utils/rateLimiter";
 
 const router = Router();
 
-router.route("/").post(verifyJWT, createShortUrl);
+router.route("/").post(shortUrlLimit, verifyJWT, createShortUrl);
 
 router
     .route("/:shortUrl")
-    .get(redirectToOriginalUrl)
+    .get(generalLimit, redirectToOriginalUrl)
     .patch(verifyJWT, updateShortUrl)
     .delete(verifyJWT, deleteShortUrl);
 
-router.route("/password/:shortUrl").post(redirectToProtectedUrl);
+router.route("/password/:shortUrl").post(shortUrlLimit, redirectToProtectedUrl);
 
-router.route("/analytics/:shortUrl").get(verifyJWT, getAnalytics);
+router
+    .route("/analytics/:shortUrl")
+    .get(shortUrlLimit, verifyJWT, getAnalytics);
 
 export default router;

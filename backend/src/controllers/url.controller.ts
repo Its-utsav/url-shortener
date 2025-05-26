@@ -284,7 +284,7 @@ const deleteShortUrl = asyncHandler(
                     new ApiResponse(200, {}, "Short Url successfully deleteed")
                 );
         } catch (error) {
-            console.error(`Error while deleteing the short url ${error}`)
+            console.error(`Error while deleteing the short url ${error}`);
             await session.abortTransaction();
             throw new ApiError(500, "Internal Server error");
         } finally {

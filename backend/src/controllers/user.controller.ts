@@ -195,7 +195,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             .json(
                 new ApiResponse(
                     200,
-                    { ...updatedUser?.toObject(), accessToken, refreshToken },
+                    { ...updatedUser?.toObject() }, //, accessToken, refreshToken
                     "Refresh Token is update"
                 )
             );
@@ -225,7 +225,8 @@ const deleteUser = asyncHandler(async (req, res) => {
         }
 
         // now remove user itself
-        const isUserExists = await User.findByIdAndDelete(userId);
+        const isUserExists =
+            await User.findByIdAndDelete(userId).session(session);
         if (!isUserExists) {
             console.error("Failed To delete suser");
         }
@@ -238,7 +239,7 @@ const deleteUser = asyncHandler(async (req, res) => {
             .clearCookie("refershToken", opions)
             .json(new ApiResponse(200, "User Successfully Deleted"));
     } catch (error) {
-        console.error(error);
+        console.error(`Faild To delete user ${error}`);
         // any error abort it
         await session.abortTransaction();
         throw new ApiError(
