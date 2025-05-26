@@ -24,6 +24,3 @@
 | `/api/v1/urls/:shortUrl`           | DELETE | Delete short url                                 |
 | `/api/v1/urls/password/:shortUrl`  | POST   | For password protected short url verify password |
 | `/api/v1/urls/analytics/:shortUrl` | GET    | Get analytics of short url                       |
-
-
-
