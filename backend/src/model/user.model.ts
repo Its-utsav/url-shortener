@@ -73,7 +73,7 @@ userSchema.methods.generateRefershToken = function (): string | undefined {
     if (!key) {
         throw new Error("Refersh Token not available in ENV");
     }
-    let expiresIn = (process.env.REFERSHTOKEN_EXPIRY! ||
+    const expiresIn = (process.env.REFERSHTOKEN_EXPIRY! ||
         "30D") as SignOptions["expiresIn"];
 
     try {
@@ -97,7 +97,7 @@ userSchema.methods.generateAccessToken = function (): string | undefined {
     if (!key) {
         throw new Error("Refersh Token not available in ENV");
     }
-    let expiresIn = (process.env.ACCESSTOKEN_EXPIRY! ||
+    const expiresIn = (process.env.ACCESSTOKEN_EXPIRY! ||
         "30D") as SignOptions["expiresIn"];
     try {
         return jwt.sign(

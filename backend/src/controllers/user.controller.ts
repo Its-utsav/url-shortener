@@ -200,6 +200,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
                 )
             );
     } catch (error) {
+        console.log("Error while refreshing token ", error);
         throw new ApiError(
             401,
             "Something went wrong while Refreshing refresh token"
@@ -269,10 +270,8 @@ const getInfoOfUser = asyncHandler(async (req, res) => {
 });
 
 export {
-    deleteUser,
-    loginUser,
+    deleteUser, getInfoOfUser, loginUser,
     logoutUser,
     refreshAccessToken,
-    registerUser,
-    getInfoOfUser,
+    registerUser
 };

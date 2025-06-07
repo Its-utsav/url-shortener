@@ -140,7 +140,7 @@ const redirectToProtectedUrl = asyncHandler(
         }
         const ip = req.headers["x-real-ip"] || req.socket.remoteAddress;
 
-        const clientInfo = await visitedHistory.create({
+        await visitedHistory.create({
             shortUrlId: url._id,
             ipAddress: ip,
             deviceType: req.useragent?.platform,
@@ -380,5 +380,6 @@ export {
     getAnalytics,
     redirectToOriginalUrl,
     redirectToProtectedUrl,
-    updateShortUrl,
+    updateShortUrl
 };
+
