@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { Footer, Header } from "./components";
+import { Outlet } from "react-router";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
-      <div className="bg-red-300 m-f flex">
-        <h1>Hello World</h1>
+      <div className="flex flex-wrap min-h-screen content-between bg-background">
+        <div className="mx-4 block w-full">
+          <Header />
+          <main>
+            <Outlet />
+          </main>
+          <Footer />
+        </div>
       </div>
     </>
   );

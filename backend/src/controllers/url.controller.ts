@@ -380,6 +380,5 @@ export {
     getAnalytics,
     redirectToOriginalUrl,
     redirectToProtectedUrl,
-    updateShortUrl
+    updateShortUrl,
 };
-

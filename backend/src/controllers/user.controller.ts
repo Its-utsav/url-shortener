@@ -270,8 +270,10 @@ const getInfoOfUser = asyncHandler(async (req, res) => {
 });
 
 export {
-    deleteUser, getInfoOfUser, loginUser,
+    deleteUser,
+    getInfoOfUser,
+    loginUser,
     logoutUser,
     refreshAccessToken,
-    registerUser
+    registerUser,
 };
