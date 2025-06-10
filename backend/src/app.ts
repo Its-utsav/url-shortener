@@ -1,5 +1,6 @@
 import express from "express";
 import expressuseraget from "express-useragent";
+import cookieParser from "cookie-parser";
 const app = express();
 
 app.use(
@@ -14,6 +15,8 @@ app.use(
         extended: true,
     })
 );
+
+app.use(cookieParser());
 
 app.use(expressuseraget.express());
 app.set("trust proxy", true);
