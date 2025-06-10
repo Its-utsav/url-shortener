@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
-import { Button, Input } from "../components";
+import { Button, ErrorCmp, Input, Loading } from "../components";
 import authService from "../service/auth";
 import { login } from "../store/authSlice";
 import type { IRegister } from "../types";
@@ -21,10 +21,10 @@ export default function SignUp() {
       if (user) {
         console.log(user);
         dispatch(login(user));
-        navigate("/");
+        navigate("/login");
       }
     } catch (error) {
-      setError(error.message);
+      if (error instanceof Error) setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -59,13 +59,14 @@ export default function SignUp() {
   return (
     <div className="flex items-center justify-center my-4 flex-wrap">
       <form name="form">
-        <Input label="username" autoComplete="username" required />
-        <Input label="email" autoComplete="email" required />
+        <Input label="username" autoComplete="username" required type="text" />
+        <Input label="email" autoComplete="email" required type="text" />
         <Input
           label="password"
           autoComplete="current-password"
           required
           minLength={8}
+          type="text"
         />
         <div className="flex items-center justify-center my-4 flex-col">
           <Button
@@ -76,11 +77,9 @@ export default function SignUp() {
           >
             Resgister
           </Button>
-          <div className="text-red-400 m-4 font-bold">
-            {error && <p>{error}</p>}
-          </div>
+          {error && <ErrorCmp message={error} />}
         </div>
-        {loading && <p className="bg-green-400 p-4">Loading</p>}
+        {loading && <Loading />}
       </form>
     </div>
   );

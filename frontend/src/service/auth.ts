@@ -1,4 +1,3 @@
-import { combineSlices } from "@reduxjs/toolkit";
 import env from "../config/env";
 import type { IRegister, ILogin } from "../types";
 
@@ -8,7 +7,7 @@ export class AuthService {
   constructor() {
     const isDev = env.IS_DEV;
     this.BASE_URL = isDev ? "/api/v1" : env.BACKEND_URL;
-    console.log(this.BASE_URL);
+    // console.log(this.BASE_URL);
   }
 
   async register(data: IRegister) {

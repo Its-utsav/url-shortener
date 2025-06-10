@@ -6,12 +6,14 @@ export class UrlService {
 
   constructor() {
     const isDev = env.IS_DEV;
-    this.BASE_URL = isDev ? "/api" : env.BACKEND_URL;
+    this.BASE_URL = isDev ? "/api/v1" : env.BACKEND_URL;
+    console.log(this.BASE_URL)
   }
 
   async createUrl(data: ICreateUrl) {
+    console.log(data)
     try {
-      const res = await fetch(`${this.BASE_URL}/urls/`, {
+      const res = await fetch(`${this.BASE_URL}/urls`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -19,9 +21,13 @@ export class UrlService {
         body: JSON.stringify(data),
         credentials: "include",
       });
+      console.log(res)
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message);
+      }
 
-      if (!res.ok) throw new Error("createUrl failed");
-      return await res.json();
+      return resData;
     } catch (error) {
       console.log(`Error while creating shorturl: ${error}`);
       throw error;
@@ -38,8 +44,12 @@ export class UrlService {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("getUrl failed");
-      return await res.json();
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message);
+      }
+
+      return resData;
     } catch (error) {
       console.log(`Error while getting shorturl: ${error}`);
       throw error;
@@ -57,8 +67,12 @@ export class UrlService {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("updateUrl failed");
-      return await res.json();
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message);
+      }
+
+      return resData;
     } catch (error) {
       console.log(`Error while updating shorturl: ${error}`);
       throw error;
@@ -75,8 +89,12 @@ export class UrlService {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("deleteUrl failed");
-      return await res.json();
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message);
+      }
+
+      return resData;
     } catch (error) {
       console.log(`Error while deleteing shorturl: ${error}`);
       throw error;
@@ -93,8 +111,12 @@ export class UrlService {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("getAnalytics failed");
-      return await res.json();
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message);
+      }
+
+      return resData;
     } catch (error) {
       console.log(`Error while getAnalytics shorturl: ${error}`);
       throw error;
@@ -112,8 +134,12 @@ export class UrlService {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("verifyPassword failed");
-      return await res.json();
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message);
+      }
+
+      return resData;
     } catch (error) {
       console.log(`Error while verifying password for shorturl: ${error}`);
       throw error;
@@ -121,6 +147,6 @@ export class UrlService {
   }
 }
 
-const url = new UrlService();
+const urlService = new UrlService();
 
-export default url;
+export default urlService;

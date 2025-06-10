@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
-import { Button, Input } from "../components";
+import { Button, ErrorCmp, Input } from "../components";
 import authService from "../service/auth";
 import { login } from "../store/authSlice";
 import type { ILogin } from "../types";
@@ -16,17 +16,21 @@ export default function Login() {
   const registerUser = async (data: ILogin) => {
     setLoading(true);
     try {
-      console.log("for register", data);
+      // console.log("for register", data);
       const user = await authService.login(data);
       if (user) {
-        console.log(user);
+        // console.log(user);
         dispatch(
-          login({ userId: user._id, usename: user.name, email: user.email }),
+          login({
+            userId: user.data._id,
+            username: user.data.username,
+            email: user.data.email,
+          }),
         );
         navigate("/");
       }
     } catch (error) {
-      setError(error.message);
+      if (error instanceof Error) setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -58,12 +62,13 @@ export default function Login() {
   return (
     <div className="flex items-center justify-center my-4 flex-wrap">
       <form name="form">
-        <Input label="email" autoComplete="email" required />
+        <Input label="email" autoComplete="email" required type="text" />
         <Input
           label="password"
           autoComplete="current-password"
           required
           minLength={8}
+          type="text"
         />
         <div className="flex items-center justify-center my-4 flex-col">
           <Button
@@ -74,15 +79,10 @@ export default function Login() {
           >
             Login
           </Button>
-          <div className="text-red-400 m-4 font-bold">
-            {error && <p>{error}</p>}
-          </div>
+          {error && <ErrorCmp message={error} />}
         </div>
         {loading && <p className="bg-green-400 p-4">Loading</p>}
       </form>
     </div>
   );
-}
-function dispatch(arg0: any) {
-  throw new Error("Function not implemented.");
 }
