@@ -7,11 +7,11 @@ export class UrlService {
   constructor() {
     const isDev = env.IS_DEV;
     this.BASE_URL = isDev ? "/api/v1" : env.BACKEND_URL;
-    console.log(this.BASE_URL)
+    console.log(this.BASE_URL);
   }
 
   async createUrl(data: ICreateUrl) {
-    console.log(data)
+    // console.log(data)
     try {
       const res = await fetch(`${this.BASE_URL}/urls`, {
         method: "POST",
@@ -21,7 +21,7 @@ export class UrlService {
         body: JSON.stringify(data),
         credentials: "include",
       });
-      console.log(res)
+      console.log(res);
       const resData = await res.json();
       if (!res.ok || !resData.success) {
         throw new Error(resData.message);
@@ -142,6 +142,49 @@ export class UrlService {
       return resData;
     } catch (error) {
       console.log(`Error while verifying password for shorturl: ${error}`);
+      throw error;
+    }
+  }
+
+  async getAllUserUrls() {
+    try {
+      const res = await fetch(`${this.BASE_URL}/auth/urls`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message);
+      }
+      return resData;
+    } catch (error) {
+      console.log(`Error while getting shorturl: ${error}`);
+      throw error;
+    }
+  }
+
+  async visitUrl(urlId: string) {
+    try {
+      const res = await fetch(`${this.BASE_URL}/urls/r/${urlId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message);
+      }
+
+      return resData;
+    } catch (error) {
+      console.log(`Error while getting shorturl: ${error}`);
       throw error;
     }
   }

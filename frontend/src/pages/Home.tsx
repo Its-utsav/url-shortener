@@ -1,5 +1,6 @@
 import { useLocation } from "react-router";
 import { Loading, NewUrl } from "../components";
+import CreatedUrls from "./CreatedUrls";
 
 export default function Home() {
   const { pathname } = useLocation();
@@ -8,5 +9,5 @@ export default function Home() {
   // if path is /new than form for creating
 
   // other wise show login to generate short urls
-  return <>{pathname === "/" ? <h1>Created short urls</h1> : <NewUrl />}</>;
+  return <>{pathname === "/" ? <CreatedUrls /> : <NewUrl />}</>;
 }

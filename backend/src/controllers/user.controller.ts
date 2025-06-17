@@ -269,6 +269,22 @@ const getInfoOfUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, user, "User Data fecthed successfully"));
 });
 
+const getUserURLs = asyncHandler(async (req, res) => {
+    const userId = req.user?._id;
+    // find all created user urls
+    if (!isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid userId");
+    }
+
+    const allUrls = await Url.find({
+        createdBy: userId,
+    }).lean();
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, allUrls, "All urls fetched successfully"));
+});
+
 export {
     deleteUser,
     getInfoOfUser,
@@ -276,4 +292,5 @@ export {
     logoutUser,
     refreshAccessToken,
     registerUser,
+    getUserURLs,
 };

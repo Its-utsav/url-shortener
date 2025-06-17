@@ -75,6 +75,7 @@ const createShortUrl = asyncHandler(
 const redirectToOriginalUrl = asyncHandler(
     async (req: Request, res: Response) => {
         const { shortUrl } = req.params;
+        console.log(shortUrl)
         if (!shortUrl) {
             throw new ApiError(401, "Short Url not provided");
         }
@@ -363,7 +364,7 @@ const getAnalytics = asyncHandler(
                 },
             },
         ]);
-
+        console.log(data);
         if (!data || data?.length == 0) {
             throw new ApiError(404, "No Data found");
         }
@@ -374,6 +375,19 @@ const getAnalytics = asyncHandler(
     }
 );
 
+const getUrlInfo = asyncHandler(async (req, res) => {
+    const { shortUrl } = req.params;
+    if (!shortUrl) throw new ApiError(400, "short Url is missing");
+
+    const urlInfo = await Url.findOne({ shortUrl }).lean();
+    if (!urlInfo) {
+        throw new ApiError(404, "No url info found");
+    }
+    return res
+        .status(200)
+        .json(new ApiResponse(200, urlInfo, "Url data fetched successfully"));
+});
+
 export {
     createShortUrl,
     deleteShortUrl,
@@ -381,4 +395,5 @@ export {
     redirectToOriginalUrl,
     redirectToProtectedUrl,
     updateShortUrl,
+    getUrlInfo,
 };

@@ -17,7 +17,7 @@ export default function NewUrl() {
       const res = await urlService.createUrl(formData!);
       console.log(res);
       if (res) {
-        navigate(`/url/analytics/${res.data.shortUrl}`);
+        navigate(`/`);
       }
     } catch (error) {
       if (error instanceof Error) setError(error.message);

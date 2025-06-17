@@ -7,6 +7,7 @@ import {
     getAnalytics,
     redirectToProtectedUrl,
     updateShortUrl,
+    getUrlInfo,
 } from "../controllers/url.controller";
 import { generalLimit, shortUrlLimit } from "../utils/rateLimiter";
 
@@ -16,9 +17,11 @@ router.route("/").post(shortUrlLimit, verifyJWT, createShortUrl);
 
 router
     .route("/:shortUrl")
-    .get(generalLimit, redirectToOriginalUrl)
+    .get(generalLimit, getUrlInfo)
     .patch(verifyJWT, updateShortUrl)
     .delete(verifyJWT, deleteShortUrl);
+
+router.route("/r/:shortUrl").get(generalLimit, redirectToOriginalUrl);
 
 router.route("/password/:shortUrl").post(shortUrlLimit, redirectToProtectedUrl);
 

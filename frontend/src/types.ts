@@ -24,3 +24,14 @@ export interface IUpdateUrl {
   isPasswordProtected?: boolean;
   password?: string;
 }
+
+export interface IUrl {
+  createdAt: string;
+  createdBy: string;
+  description: string;
+  isPasswordProtected: boolean;
+  originalUrl: string;
+  shortUrl: string;
+  updatedAt: string;
+  _id: string;
+}

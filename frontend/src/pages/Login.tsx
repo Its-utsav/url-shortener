@@ -25,7 +25,7 @@ export default function Login() {
             userId: user.data._id,
             username: user.data.username,
             email: user.data.email,
-          })
+          }),
         );
         navigate("/");
       }

@@ -48,7 +48,7 @@ export default function Header() {
                 >
                   {item.name}
                 </NavLink>
-              ) : null
+              ) : null,
             )}
             {authStatus && <Logout />}
           </div>
