@@ -35,10 +35,10 @@ export default function NewUrl() {
   };
   return (
     <div className="">
-      <button onClick={(e) => navigate(`/url/analytics/qZbHwGqx`)}>
+      {/* <button onClick={(e) => navigate(`/url/analytics/qZbHwGqx`)}>
         {" "}
         visit
-      </button>
+      </button> */}
       <form onSubmit={handleSubmit}>
         <Input
           type="text"

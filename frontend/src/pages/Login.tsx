@@ -7,17 +7,17 @@ import { login } from "../store/authSlice";
 import type { ILogin } from "../types";
 
 export default function Login() {
-  const [userData, setUserData] = useState<ILogin | null>(null);
+  const [formUserData, setFormUserData] = useState<ILogin | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [formErrorStatus, setFormErrorStatus] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const registerUser = async (data: ILogin) => {
+  const registerUser = async () => {
     setLoading(true);
     try {
       // console.log("for register", data);
-      const user = await authService.login(data);
+      const user = await authService.login(formUserData!);
       if (user) {
         // console.log(user);
         dispatch(
@@ -25,7 +25,7 @@ export default function Login() {
             userId: user.data._id,
             username: user.data.username,
             email: user.data.email,
-          }),
+          })
         );
         navigate("/");
       }
@@ -40,35 +40,41 @@ export default function Login() {
     e.preventDefault();
     // setFormErrorStatus(e.currentTarget.form?.reportValidity()!);
     // console.log(e.currentTarget.form?.elements);
-
-    const email = e.currentTarget.form?.elements.namedItem(
-      "email",
-    ) as HTMLInputElement;
-    const password = e.currentTarget.form?.elements.namedItem(
-      "password",
-    ) as HTMLInputElement;
-
-    setUserData({
-      email: email.value,
-      password: password.value,
-    });
-    console.log(userData!);
     setError("");
 
     // if (userData && userData.password && userData.password.length > 8) {
-    registerUser(userData!);
+    registerUser();
     // }
   };
   return (
     <div className="flex items-center justify-center my-4 flex-wrap">
       <form name="form">
-        <Input label="email" autoComplete="email" required type="text" />
+        <Input
+          label="email"
+          autoComplete="email"
+          required
+          type="text"
+          value={formUserData?.email}
+          onChange={(e) =>
+            setFormUserData((prevData) => ({
+              ...prevData!,
+              email: e.target.value,
+            }))
+          }
+        />
         <Input
           label="password"
           autoComplete="current-password"
           required
           minLength={8}
           type="text"
+          value={formUserData?.password}
+          onChange={(e) =>
+            setFormUserData((prevData) => ({
+              ...prevData!,
+              password: e.target.value,
+            }))
+          }
         />
         <div className="flex items-center justify-center my-4 flex-col">
           <Button

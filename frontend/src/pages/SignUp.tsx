@@ -1,26 +1,30 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import { Button, ErrorCmp, Input, Loading } from "../components";
 import authService from "../service/auth";
-import { login } from "../store/authSlice";
 import type { IRegister } from "../types";
 
 export default function SignUp() {
-  const [userData, setUserData] = useState<IRegister | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [formErrorStatus, setFormErrorStatus] = useState(false);
+  const [formData, setFormData] = useState<IRegister | null>(null);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const registerUser = async (data: IRegister) => {
+
+  const registerUser = async () => {
     setLoading(true);
     try {
-      console.log("for register", data);
-      const user = await authService.register(data);
+      console.log("for register", formData);
+      const user = await authService.register(formData!);
       if (user) {
         console.log(user);
-        dispatch(login(user));
+        // dispatch(
+        //   login({
+        //     userId: user.data._id,
+        //     username: user.data.username,
+        //     email: user.data.email,
+        //   })
+        // );
         navigate("/login");
       }
     } catch (error) {
@@ -32,41 +36,56 @@ export default function SignUp() {
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
-    // setFormErrorStatus(e.currentTarget.form?.reportValidity()!);
-    // console.log(e.currentTarget.form?.elements);
-    const username = e.currentTarget.form?.elements.namedItem(
-      "username",
-    ) as HTMLInputElement;
-    const email = e.currentTarget.form?.elements.namedItem(
-      "email",
-    ) as HTMLInputElement;
-    const password = e.currentTarget.form?.elements.namedItem(
-      "password",
-    ) as HTMLInputElement;
-
-    setUserData({
-      username: username.value,
-      email: email.value,
-      password: password.value,
-    });
 
     setError("");
 
     // if (userData && userData.password && userData.password.length > 8) {
-    registerUser(userData!);
+    // registerUser(userData!);
+    registerUser();
     // }
   };
   return (
     <div className="flex items-center justify-center my-4 flex-wrap">
       <form name="form">
-        <Input label="username" autoComplete="username" required type="text" />
-        <Input label="email" autoComplete="email" required type="text" />
+        <Input
+          label="username"
+          autoComplete="username"
+          required
+          type="text"
+          value={formData?.username}
+          onChange={(e) =>
+            setFormData((prevData) => ({
+              ...prevData!,
+              username: e.target.value,
+            }))
+          }
+        />
+        <Input
+          label="email"
+          autoComplete="email"
+          required
+          type="text"
+          value={formData?.email}
+          onChange={(e) =>
+            setFormData((prevData) => ({
+              ...prevData!,
+              email: e.target.value,
+            }))
+          }
+        />
         <Input
           label="password"
           autoComplete="current-password"
           required
           minLength={8}
           type="text"
+          value={formData?.password}
+          onChange={(e) =>
+            setFormData((prevData) => ({
+              ...prevData!,
+              password: e.target.value,
+            }))
+          }
         />
         <div className="flex items-center justify-center my-4 flex-col">
           <Button

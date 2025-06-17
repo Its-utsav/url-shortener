@@ -38,7 +38,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/info",
+        path: "/me",
         element: (
           <AuthLayout>
             <Me />
@@ -76,7 +76,7 @@ const router = createBrowserRouter([
   //   ],
   // },
 ]);
-console.log(router.routes);
+// console.log(router.routes);
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>

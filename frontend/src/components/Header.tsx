@@ -28,7 +28,7 @@ export default function Header() {
     { name: "Login", link: "/login", visible: !authStatus },
     { name: "Sign Up", link: "/signup", visible: !authStatus },
     { name: "Create", link: "/url/new", visible: authStatus },
-    { name: "You", link: "/info", visible: authStatus },
+    { name: "You", link: "/me", visible: authStatus },
   ];
 
   return (

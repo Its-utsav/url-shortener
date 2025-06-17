@@ -1,6 +1,7 @@
 import express from "express";
 import expressuseraget from "express-useragent";
 import cookieParser from "cookie-parser";
+import logger from "./utils/Logger";
 const app = express();
 
 app.use(
@@ -24,7 +25,6 @@ app.set("trust proxy", true);
 import userRoutes from "./routes/user.routes";
 import urlRoutes from "./routes/url.routes";
 import globalErrorHandler from "./utils/globalErrorHandler";
-import logger from "./utils/Logger";
 
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/urls", urlRoutes);
