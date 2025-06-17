@@ -15,7 +15,7 @@ app.use(
         extended: true,
     })
 );
-
+app.use(logger);
 app.use(cookieParser());
 
 app.use(expressuseraget.express());
@@ -24,6 +24,7 @@ app.set("trust proxy", true);
 import userRoutes from "./routes/user.routes";
 import urlRoutes from "./routes/url.routes";
 import globalErrorHandler from "./utils/globalErrorHandler";
+import logger from "./utils/Logger";
 
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/urls", urlRoutes);
