@@ -5,12 +5,12 @@ import { Button, ErrorCmp, Input } from "../components";
 import authService from "../service/auth";
 import { login } from "../store/authSlice";
 import type { ILogin } from "../types";
+import { getFormValidationErrors } from "../utils/validation";
 
 export default function Login() {
   const [formUserData, setFormUserData] = useState<ILogin | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  const [formErrorStatus, setFormErrorStatus] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const registerUser = async () => {
@@ -36,15 +36,41 @@ export default function Login() {
     }
   };
 
+  const validate = () => {
+    // email , password
+    //
+    type FormErrorType = {
+      [key: string]: string;
+    };
+    const formErrors: FormErrorType = {};
+    if (!formUserData?.email || formUserData.email.trim() === "")
+      formErrors.email = "Email is required";
+    if (!formUserData?.password || formUserData.password.trim() === "")
+      formErrors.password = "Password is required";
+
+    const emailPattern = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}/;
+    if (formUserData?.email && !emailPattern.test(formUserData.email))
+      formErrors.email = "Invalid Email format";
+
+    if (formUserData?.password && formUserData.password.length < 8)
+      formErrors.password = "Password should be atleast 8 character long";
+
+    return formErrors;
+  };
+
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
     // setFormErrorStatus(e.currentTarget.form?.reportValidity()!);
     // console.log(e.currentTarget.form?.elements);
     setError("");
 
-    // if (userData && userData.password && userData.password.length > 8) {
-    registerUser();
-    // }
+    const validationErrors = validate();
+
+    // No Errors
+    if (Object.keys(validationErrors).length === 0) registerUser();
+    else {
+      setError(getFormValidationErrors(validationErrors));
+    }
   };
   return (
     <div className="flex items-center justify-center my-4 flex-wrap">
@@ -81,7 +107,7 @@ export default function Login() {
             value="Register"
             type="submit"
             onClick={handleSubmit}
-            disabled={formErrorStatus ? true : false}
+            // disabled={formErrorStatus ? true : false}
           >
             Login
           </Button>

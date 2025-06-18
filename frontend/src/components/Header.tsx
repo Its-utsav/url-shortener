@@ -1,4 +1,4 @@
-import { Navigate, NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import { Logo, Container, Button } from "./index";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "../store/auth";
@@ -7,10 +7,11 @@ import { logout } from "../store/authSlice";
 
 export function Logout() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const handleClick = () => {
     authService.logout().then((res) => {
       if (res) dispatch(logout());
-      Navigate({ to: "/" });
+      navigate("/");
     });
   };
   return (

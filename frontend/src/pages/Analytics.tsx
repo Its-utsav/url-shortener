@@ -1,11 +1,10 @@
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from "chart.js";
 import { useEffect, useState } from "react";
 import { Pie } from "react-chartjs-2";
-import { Link, Navigate, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { Button, ErrorCmp } from "../components";
-import urlService from "../service/url";
-import type { IUrl } from "../types";
 import env from "../config/env";
+import urlService from "../service/url";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -32,7 +31,7 @@ export default function Analytics() {
   useEffect(() => {
     fetchData();
   }, [urlId]);
-  console.log(error);
+  // console.log(error);
   const deviceTypes = urlData?.map((d) => d.deviceType);
   const clicks = urlData?.map((d) => d.totalClicks);
   const data = {

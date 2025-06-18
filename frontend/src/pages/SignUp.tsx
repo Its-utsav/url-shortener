@@ -3,21 +3,21 @@ import { useNavigate } from "react-router";
 import { Button, ErrorCmp, Input, Loading } from "../components";
 import authService from "../service/auth";
 import type { IRegister } from "../types";
+import { getFormValidationErrors } from "../utils/validation";
 
 export default function SignUp() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  const [formErrorStatus, setFormErrorStatus] = useState(false);
   const [formData, setFormData] = useState<IRegister | null>(null);
   const navigate = useNavigate();
 
   const registerUser = async () => {
     setLoading(true);
     try {
-      console.log("for register", formData);
+      // console.log("for register", formData);
       const user = await authService.register(formData!);
       if (user) {
-        console.log(user);
+        // console.log(user);
         // dispatch(
         //   login({
         //     userId: user.data._id,
@@ -34,15 +34,42 @@ export default function SignUp() {
     }
   };
 
+  const validate = () => {
+    type FormErrorType = {
+      [key: string]: string;
+    };
+    const formErrors: FormErrorType = {};
+    if (!formData?.username || formData.username.trim() === "")
+      formErrors.username = "Username is required";
+
+    if (!formData?.email || formData.email.trim() === "")
+      formErrors.email = "Email is required";
+
+    if (!formData?.password || formData.password.trim() === "")
+      formErrors.password = "Password is required";
+
+    const emailPattern = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}/;
+    if (formData?.email && !emailPattern.test(formData.email))
+      formErrors.email = "Invalid Email format";
+
+    if (formData?.password && formData.password.length < 8)
+      formErrors.password = "Password should be atleast 8 character long";
+
+    return formErrors;
+  };
+
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
 
     setError("");
 
-    // if (userData && userData.password && userData.password.length > 8) {
-    // registerUser(userData!);
-    registerUser();
-    // }
+    const validationErrors = validate();
+
+    // No Errors
+    if (Object.keys(validationErrors).length === 0) registerUser();
+    else {
+      setError(getFormValidationErrors(validationErrors));
+    }
   };
   return (
     <div className="flex items-center justify-center my-4 flex-wrap">
@@ -92,7 +119,7 @@ export default function SignUp() {
             value="Register"
             type="submit"
             onClick={handleSubmit}
-            disabled={formErrorStatus ? true : false}
+            // disabled={formErrorStatus ? true : false}
           >
             Resgister
           </Button>

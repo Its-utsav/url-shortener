@@ -43,7 +43,7 @@ export default function CreatedUrls() {
   useEffect(() => {
     fetchData();
   }, []);
-  console.log(data);
+  // console.log(data);
   return loading ? (
     <Loading />
   ) : (
